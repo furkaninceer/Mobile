@@ -1,0 +1,465 @@
+// screens/standings_screen.dart
+import 'package:flutter/material.dart';
+
+class StandingsScreen extends StatefulWidget {
+  @override
+  _StandingsScreenState createState() => _StandingsScreenState();
+}
+
+class _StandingsScreenState extends State<StandingsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  bool _isLoading = true;
+  List<TeamStanding> _eastStandings = [];
+  List<TeamStanding> _westStandings = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _loadStandings();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadStandings() async {
+    // Gerçek uygulamada API'den veri çekilecek
+    await Future.delayed(Duration(seconds: 1)); // API çağrısı simülasyonu
+    
+    // Doğu Konferansı takımları
+    final List<TeamStanding> eastTeams = [
+      TeamStanding(
+        name: 'Boston Celtics',
+        abbreviation: 'BOS',
+        logoUrl: 'assets/teams/celtics.png',
+        wins: 60,
+        losses: 22,
+        streak: 'W3',
+        last10: '8-2',
+        homeRecord: '32-9',
+        awayRecord: '28-13',
+        rank: 1,
+      ),
+      TeamStanding(
+        name: 'Milwaukee Bucks',
+        abbreviation: 'MIL',
+        logoUrl: 'assets/teams/bucks.png',
+        wins: 56,
+        losses: 26,
+        streak: 'W1',
+        last10: '7-3',
+        homeRecord: '30-11',
+        awayRecord: '26-15',
+        rank: 2,
+      ),
+      TeamStanding(
+        name: 'Philadelphia 76ers',
+        abbreviation: 'PHI',
+        logoUrl: 'assets/teams/76ers.png',
+        wins: 54,
+        losses: 28,
+        streak: 'L1',
+        last10: '6-4',
+        homeRecord: '29-12',
+        awayRecord: '25-16',
+        rank: 3,
+      ),
+      TeamStanding(
+        name: 'Miami Heat',
+        abbreviation: 'MIA',
+        logoUrl: 'assets/teams/heat.png',
+        wins: 52,
+        losses: 30,
+        streak: 'W5',
+        last10: '8-2',
+        homeRecord: '30-11',
+        awayRecord: '22-19',
+        rank: 4,
+      ),
+      TeamStanding(
+        name: 'New York Knicks',
+        abbreviation: 'NYK',
+        logoUrl: 'assets/teams/knicks.png',
+        wins: 50,
+        losses: 32,
+        streak: 'W2',
+        last10: '7-3',
+        homeRecord: '27-14',
+        awayRecord: '23-18',
+        rank: 5,
+      ),
+    ];
+    
+    // Batı Konferansı takımları
+    final List<TeamStanding> westTeams = [
+      TeamStanding(
+        name: 'Denver Nuggets',
+        abbreviation: 'DEN',
+        logoUrl: 'assets/teams/nuggets.png',
+        wins: 57,
+        losses: 25,
+        streak: 'W4',
+        last10: '8-2',
+        homeRecord: '33-8',
+        awayRecord: '24-17',
+        rank: 1,
+      ),
+      TeamStanding(
+        name: 'Golden State Warriors',
+        abbreviation: 'GSW',
+        logoUrl: 'assets/teams/warriors.png',
+        wins: 55,
+        losses: 27,
+        streak: 'W6',
+        last10: '9-1',
+        homeRecord: '32-9',
+        awayRecord: '23-18',
+        rank: 2,
+      ),
+      TeamStanding(
+        name: 'Phoenix Suns',
+        abbreviation: 'PHX',
+        logoUrl: 'assets/teams/suns.png',
+        wins: 52,
+        losses: 30,
+        streak: 'L2',
+        last10: '6-4',
+        homeRecord: '30-11',
+        awayRecord: '22-19',
+        rank: 3,
+      ),
+      TeamStanding(
+        name: 'Los Angeles Lakers',
+        abbreviation: 'LAL',
+        logoUrl: 'assets/teams/lakers.png',
+        wins: 49,
+        losses: 33,
+        streak: 'W2',
+        last10: '7-3',
+        homeRecord: '28-13',
+        awayRecord: '21-20',
+        rank: 4,
+      ),
+      TeamStanding(
+        name: 'Dallas Mavericks',
+        abbreviation: 'DAL',
+        logoUrl: 'assets/teams/mavericks.png',
+        wins: 48,
+        losses: 34,
+        streak: 'W1',
+        last10: '5-5',
+        homeRecord: '27-14',
+        awayRecord: '21-20',
+        rank: 5,
+      ),
+    ];
+    
+    if (mounted) {
+      setState(() {
+        _eastStandings = eastTeams;
+        _westStandings = westTeams;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Puan Durumu'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: 'Doğu Konferansı'),
+            Tab(text: 'Batı Konferansı'),
+          ],
+        ),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildConferenceStandings(_eastStandings),
+                _buildConferenceStandings(_westStandings),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildConferenceStandings(List<TeamStanding> standings) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(flex: 1, child: Text('Sıra', style: TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(flex: 3, child: Text('Takım', style: TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(flex: 1, child: Text('G', style: TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(flex: 1, child: Text('M', style: TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(flex: 1, child: Text('W%', style: TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(flex: 1, child: Text('Son10', style: TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(flex: 1, child: Text('Seri', style: TextStyle(fontWeight: FontWeight.bold))),
+            ],
+          ),
+        ),
+        Divider(height: 1),
+        Expanded(
+          child: ListView.builder(
+            itemCount: standings.length,
+            itemBuilder: (context, index) {
+              final team = standings[index];
+              return InkWell(
+                onTap: () {
+                  _showTeamStandingDetails(context, team);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: index % 2 == 0 ? Colors.white : Colors.grey[50],
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey[300]!, width: 0.5),
+                    ),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          '${team.rank}',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: Colors.transparent,
+                              child: Text(
+                                team.abbreviation,
+                                style: TextStyle(
+                                  color: Theme.of(context).primaryColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                team.name,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(flex: 1, child: Text('${team.wins}')),
+                      Expanded(flex: 1, child: Text('${team.losses}')),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          (team.wins / (team.wins + team.losses)).toStringAsFixed(3),
+                        ),
+                      ),
+                      Expanded(flex: 1, child: Text(team.last10)),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          team.streak,
+                          style: TextStyle(
+                            color: team.streak.startsWith('W')
+                                ? Colors.green
+                                : Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showTeamStandingDetails(BuildContext context, TeamStanding team) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(16),
+          height: MediaQuery.of(context).size.height * 0.5,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 60,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  margin: EdgeInsets.only(bottom: 16),
+                ),
+              ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.grey[200],
+                    child: Text(
+                      team.abbreviation,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        team.name,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '#${team.rank} Sıra',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      Text(
+                        '${team.wins}-${team.losses} (${(team.wins / (team.wins + team.losses)).toStringAsFixed(3)})',
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: 24),
+              Text(
+                'Takım Detayları',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStandingDetailCard('Son 10 Maç', team.last10),
+                  _buildStandingDetailCard('Seri', team.streak),
+                  _buildStandingDetailCard('Ev', team.homeRecord),
+                  _buildStandingDetailCard('Deplasman', team.awayRecord),
+                ],
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  // Takımın tüm maç sonuçlarını göster
+                  Navigator.pop(context);
+                  // Gerçek uygulamada buradan takım detaylarına gidilebilir
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text('Tüm Maçları Görüntüle'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStandingDetailCard(String label, String value) {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: value.contains('W') ? Colors.green : 
+                    value.contains('L') ? Colors.red : Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TeamStanding {
+  final String name;
+  final String abbreviation;
+  final String logoUrl;
+  final int wins;
+  final int losses;
+  final String streak;
+  final String last10;
+  final String homeRecord;
+  final String awayRecord;
+  final int rank;
+
+  TeamStanding({
+    required this.name,
+    required this.abbreviation,
+    required this.logoUrl,
+    required this.wins,
+    required this.losses,
+    required this.streak,
+    required this.last10,
+    required this.homeRecord,
+    required this.awayRecord,
+    required this.rank,
+  });
+}
