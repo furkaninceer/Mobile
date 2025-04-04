@@ -1,0 +1,173 @@
+// screens/schedule_screen.dart
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+class ScheduleScreen extends StatefulWidget {
+  @override
+  _ScheduleScreenState createState() => _ScheduleScreenState();
+}
+
+class _ScheduleScreenState extends State<ScheduleScreen> {
+  bool _isLoading = true;
+  List<Game> _games = [];
+  DateTime _selectedDate = DateTime.now();
+  late PageController _pageController;
+  final DateFormat _dateFormat = DateFormat('d MMMM yyyy', 'tr_TR');
+  final DateFormat _dayFormat = DateFormat('E', 'tr_TR');
+  final DateFormat _timeFormat = DateFormat('HH:mm');
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+    _loadGames();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadGames() async {
+    // Gerçek uygulamada API'den veri çekilecek
+    await Future.delayed(Duration(seconds: 1)); // API çağrısı simülasyonu
+    
+    // Örnek veri - bugünden itibaren 7 gün için maçlar
+    List<Game> allGames = [];
+    
+    // Her gün için 3-5 maç ekle
+    for (int day = 0; day < 7; day++) {
+      DateTime gameDate = DateTime.now().add(Duration(days: day));
+      int gameCount = 3 + (day % 3); // Her gün 3-5 maç
+      
+      for (int i = 0; i < gameCount; i++) {
+        // Rasgele takımlar ve skorlar (farklı takımlar olsun)
+        String homeTeam = _getRandomTeam(i);
+        String awayTeam = _getRandomTeam(i + gameCount);
+        
+        // Eğer bugün ya da geçmiş bir gün ise skor ekle, değilse -1 (maç oynanmamış)
+        int homeScore = day <= 0 ? 90 + (i * 5) : -1;
+        int awayScore = day <= 0 ? 85 + (i * 6) : -1;
+        
+        // Maç saati (bugün için geçmiş saat, sonraki günler için 18:00-23:30 arası)
+        DateTime gameTime;
+        if (day == 0) {
+          gameTime = DateTime.now().subtract(Duration(hours: 1 + i));
+        } else {
+          gameTime = DateTime(
+            gameDate.year,
+            gameDate.month,
+            gameDate.day,
+            18 + (i % 5),
+            (i * 15) % 60,
+          );
+        }
+        
+        Game game = Game(
+          id: day * 10 + i,
+          homeTeam: homeTeam,
+          homeTeamAbbr: _getTeamAbbreviation(homeTeam),
+          awayTeam: awayTeam,
+          awayTeamAbbr: _getTeamAbbreviation(awayTeam),
+          homeScore: homeScore,
+          awayScore: awayScore,
+          date: gameDate,
+          time: gameTime,
+          venue: 'Arena ${i + 1}',
+          isLive: day == 0 && i == 0, // Sadece ilk maç canlı olsun
+        );
+        
+        allGames.add(game);
+      }
+    }
+    
+    if (mounted) {
+      setState(() {
+        _games = allGames;
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _getRandomTeam(int seed) {
+    List<String> teams = [
+      'Boston Celtics',
+      'Los Angeles Lakers',
+      'Golden State Warriors',
+      'Milwaukee Bucks',
+      'Phoenix Suns',
+      'Denver Nuggets',
+      'Miami Heat',
+      'Philadelphia 76ers',
+      'New York Knicks',
+      'Dallas Mavericks',
+      'Brooklyn Nets',
+      'Chicago Bulls',
+      'Los Angeles Clippers',
+      'Toronto Raptors',
+      'Atlanta Hawks',
+    ];
+    return teams[seed % teams.length];
+  }
+
+  String _getTeamAbbreviation(String teamName) {
+    Map<String, String> abbreviations = {
+      'Boston Celtics': 'BOS',
+      'Los Angeles Lakers': 'LAL',
+      'Golden State Warriors': 'GSW',
+      'Milwaukee Bucks': 'MIL',
+      'Phoenix Suns': 'PHX',
+      'Denver Nuggets': 'DEN',
+      'Miami Heat': 'MIA',
+      'Philadelphia 76ers': 'PHI',
+      'New York Knicks': 'NYK',
+      'Dallas Mavericks': 'DAL',
+      'Brooklyn Nets': 'BKN',
+      'Chicago Bulls': 'CHI',
+      'Los Angeles Clippers': 'LAC',
+      'Toronto Raptors': 'TOR',
+      'Atlanta Hawks': 'ATL',
+    };
+    return abbreviations[teamName] ?? teamName.substring(0, 3).toUpperCase();
+  }
+
+  List<Game> _getGamesForDate(DateTime date) {
+    return _games.where((game) => 
+      game.date.year == date.year && 
+      game.date.month == date.month && 
+      game.date.day == date.day
+    ).toList();
+  }
+
+  void _selectDate(int index) {
+    setState(() {
+      _selectedDate = DateTime.now().add(Duration(days: index));
+    });
+    _pageController.animateToPage(
+      index,
+      duration: Duration(milliseconds: 300), 
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Maç Programı'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _buildDateSelector(),
+                Divider(height: 1),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _selectedDate
