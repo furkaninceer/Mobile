@@ -170,4 +170,230 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     controller: _pageController,
                     onPageChanged: (index) {
                       setState(() {
-                        _selectedDate
+                        _selectedDate = DateTime.now().add(Duration(days: index));
+                      });
+                    },
+                    itemCount: 7,
+                    itemBuilder: (context, index) {
+                      DateTime date = DateTime.now().add(Duration(days: index));
+                      List<Game> gamesForDate = _getGamesForDate(date);
+                      
+                      return gamesForDate.isEmpty
+                          ? Center(child: Text('Bu tarih için maç bulunamadı'))
+                          : ListView.separated(
+                              padding: EdgeInsets.all(12),
+                              itemCount: gamesForDate.length,
+                              separatorBuilder: (context, index) => SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                return _buildGameCard(gamesForDate[index]);
+                              },
+                            );
+                    },
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildDateSelector() {
+    return Container(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 7,
+        itemBuilder: (context, index) {
+          DateTime date = DateTime.now().add(Duration(days: index));
+          bool isSelected = _selectedDate.day == date.day && 
+                           _selectedDate.month == date.month && 
+                           _selectedDate.year == date.year;
+          
+          return GestureDetector(
+            onTap: () => _selectDate(index),
+            child: Container(
+              width: 70,
+              margin: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? Theme.of(context).primaryColor : Colors.grey[300]!,
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    date.day.toString(),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    _dayFormat.format(date).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isSelected ? Colors.white : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGameCard(Game game) {
+    bool isFinished = game.homeScore >= 0 && game.awayScore >= 0;
+    
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  game.isLive ? 'CANLI' : isFinished ? 'TAMAMLANDI' : _timeFormat.format(game.time),
+                  style: TextStyle(
+                    color: game.isLive ? Colors.red : Colors.black54,
+                    fontWeight: game.isLive ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                Text(game.venue, style: TextStyle(color: Colors.grey[600])),
+              ],
+            ),
+            SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        game.homeTeamAbbr,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        game.homeTeam,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  children: [
+                    if (isFinished || game.isLive)
+                      Row(
+                        children: [
+                          Text(
+                            '${game.homeScore}',
+                            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            ' - ',
+                            style: TextStyle(fontSize: 28),
+                          ),
+                          Text(
+                            '${game.awayScore}',
+                            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      )
+                    else
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'vs',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        game.awayTeamAbbr,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        game.awayTeam,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class Game {
+  final int id;
+  final String homeTeam;
+  final String homeTeamAbbr;
+  final String awayTeam;
+  final String awayTeamAbbr;
+  final int homeScore;
+  final int awayScore;
+  final DateTime date;
+  final DateTime time;
+  final String venue;
+  final bool isLive;
+
+  Game({
+    required this.id,
+    required this.homeTeam,
+    required this.homeTeamAbbr,
+    required this.awayTeam,
+    required this.awayTeamAbbr,
+    required this.homeScore,
+    required this.awayScore,
+    required this.date,
+    required this.time,
+    required this.venue,
+    this.isLive = false,
+  });
+}
