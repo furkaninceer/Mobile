@@ -1,0 +1,406 @@
+// screens/player_stats_screen.dart
+import 'package:flutter/material.dart';
+import 'dart:convert';
+
+class PlayerStatsScreen extends StatefulWidget {
+  @override
+  _PlayerStatsScreenState createState() => _PlayerStatsScreenState();
+}
+
+class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
+  List<PlayerStats> _playerStats = [];
+  List<PlayerStats> _filteredStats = [];
+  bool _isLoading = true;
+  String _searchQuery = '';
+  String _sortBy = 'ppg';
+  bool _sortAscending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlayerStats();
+  }
+
+  Future<void> _loadPlayerStats() async {
+    // Gerçek uygulamada API'den veri çekilecek
+    await Future.delayed(Duration(seconds: 2)); // API çağrısı simülasyonu
+    
+    // Örnek veri
+    final List<PlayerStats> stats = [
+      PlayerStats(
+        name: 'LeBron James',
+        team: 'LAL',
+        ppg: 25.3,
+        rpg: 7.8,
+        apg: 10.2,
+        fgPercentage: 52.3,
+        threePointPercentage: 36.5,
+      ),
+      PlayerStats(
+        name: 'Stephen Curry',
+        team: 'GSW',
+        ppg: 32.0,
+        rpg: 5.5,
+        apg: 5.8,
+        fgPercentage: 48.2,
+        threePointPercentage: 42.1,
+      ),
+      PlayerStats(
+        name: 'Giannis Antetokounmpo',
+        team: 'MIL',
+        ppg: 28.1,
+        rpg: 11.0,
+        apg: 5.9,
+        fgPercentage: 55.3,
+        threePointPercentage: 30.3,
+      ),
+      PlayerStats(
+        name: 'Kevin Durant',
+        team: 'PHX',
+        ppg: 29.7,
+        rpg: 6.7,
+        apg: 5.3,
+        fgPercentage: 52.0,
+        threePointPercentage: 38.6,
+      ),
+      PlayerStats(
+        name: 'Luka Doncic',
+        team: 'DAL',
+        ppg: 32.4,
+        rpg: 8.6,
+        apg: 8.0,
+        fgPercentage: 49.6,
+        threePointPercentage: 35.2,
+      ),
+    ];
+    
+    if (mounted) {
+      setState(() {
+        _playerStats = stats;
+        _filteredStats = stats;
+        _isLoading = false;
+        _sortPlayers();
+      });
+    }
+  }
+
+  void _searchPlayers(String query) {
+    setState(() {
+      _searchQuery = query;
+      if (query.isEmpty) {
+        _filteredStats = _playerStats;
+      } else {
+        _filteredStats = _playerStats
+            .where((player) =>
+                player.name.toLowerCase().contains(query.toLowerCase()) ||
+                player.team.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+      _sortPlayers();
+    });
+  }
+
+  void _sortPlayers() {
+    setState(() {
+      switch (_sortBy) {
+        case 'ppg':
+          _filteredStats.sort((a, b) => _sortAscending
+              ? a.ppg.compareTo(b.ppg)
+              : b.ppg.compareTo(a.ppg));
+          break;
+        case 'rpg':
+          _filteredStats.sort((a, b) => _sortAscending
+              ? a.rpg.compareTo(b.rpg)
+              : b.rpg.compareTo(a.rpg));
+          break;
+        case 'apg':
+          _filteredStats.sort((a, b) => _sortAscending
+              ? a.apg.compareTo(b.apg)
+              : b.apg.compareTo(a.apg));
+          break;
+        case 'fgPercentage':
+          _filteredStats.sort((a, b) => _sortAscending
+              ? a.fgPercentage.compareTo(b.fgPercentage)
+              : b.fgPercentage.compareTo(a.fgPercentage));
+          break;
+        case 'threePointPercentage':
+          _filteredStats.sort((a, b) => _sortAscending
+              ? a.threePointPercentage.compareTo(b.threePointPercentage)
+              : b.threePointPercentage.compareTo(a.threePointPercentage));
+          break;
+        default:
+          _filteredStats.sort((a, b) => _sortAscending
+              ? a.ppg.compareTo(b.ppg)
+              : b.ppg.compareTo(a.ppg));
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Oyuncu İstatistikleri'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Oyuncu veya Takım Ara',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onChanged: _searchPlayers,
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                Text('Sırala: '),
+                DropdownButton<String>(
+                  value: _sortBy,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _sortBy = value;
+                        _sortPlayers();
+                      });
+                    }
+                  },
+                  items: [
+                    DropdownMenuItem(value: 'ppg', child: Text('Sayı')),
+                    DropdownMenuItem(value: 'rpg', child: Text('Ribaund')),
+                    DropdownMenuItem(value: 'apg', child: Text('Asist')),
+                    DropdownMenuItem(value: 'fgPercentage', child: Text('Şut %')),
+                    DropdownMenuItem(
+                        value: 'threePointPercentage', child: Text('3 Sayı %')),
+                  ],
+                ),
+                IconButton(
+                  icon: Icon(_sortAscending
+                      ? Icons.arrow_upward
+                      : Icons.arrow_downward),
+                  onPressed: () {
+                    setState(() {
+                      _sortAscending = !_sortAscending;
+                      _sortPlayers();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : _filteredStats.isEmpty
+                    ? Center(child: Text('Sonuç bulunamadı'))
+                    : ListView.builder(
+                        itemCount: _filteredStats.length,
+                        itemBuilder: (context, index) {
+                          final player = _filteredStats[index];
+                          return Card(
+                            margin: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            child: ListTile(
+                              title: Text(
+                                player.name,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(player.team),
+                              trailing: Container(
+                                width: 180,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildStatItem('PPG', player.ppg.toStringAsFixed(1)),
+                                    _buildStatItem('RPG', player.rpg.toStringAsFixed(1)),
+                                    _buildStatItem('APG', player.apg.toStringAsFixed(1)),
+                                  ],
+                                ),
+                              ),
+                              onTap: () {
+                                _showPlayerDetails(context, player);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showPlayerDetails(BuildContext context, PlayerStats player) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(16),
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 60,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  margin: EdgeInsets.only(bottom: 16),
+                ),
+              ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Theme.of(context).primaryColor,
+                    child: Text(
+                      player.name.substring(0, 1),
+                      style: TextStyle(
+                        fontSize: 30,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        player.name,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        player.team,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: 24),
+              Text(
+                'İstatistikler',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  childAspectRatio: 2.5,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  children: [
+                    _buildDetailCard('Sayı', '${player.ppg.toStringAsFixed(1)} PPG'),
+                    _buildDetailCard('Ribaund', '${player.rpg.toStringAsFixed(1)} RPG'),
+                    _buildDetailCard('Asist', '${player.apg.toStringAsFixed(1)} APG'),
+                    _buildDetailCard('Şut %', '${player.fgPercentage.toStringAsFixed(1)}%'),
+                    _buildDetailCard('3 Sayı %', '${player.threePointPercentage.toStringAsFixed(1)}%'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailCard(String label, String value) {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PlayerStats {
+  final String name;
+  final String team;
+  final double ppg;
+  final double rpg;
+  final double apg;
+  final double fgPercentage;
+  final double threePointPercentage;
+
+  PlayerStats({
+    required this.name,
+    required this.team,
+    required this.ppg,
+    required this.rpg,
+    required this.apg,
+    required this.fgPercentage,
+    required this.threePointPercentage,
+  });
+}
