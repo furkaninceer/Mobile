@@ -1,0 +1,601 @@
+// screens/team_stats_screen.dart
+import 'package:flutter/material.dart';
+
+class TeamStatsScreen extends StatefulWidget {
+  @override
+  _TeamStatsScreenState createState() => _TeamStatsScreenState();
+}
+
+class _TeamStatsScreenState extends State<TeamStatsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  bool _isLoading = true;
+  List<TeamStats> _teamStats = [];
+  String _sortBy = 'wins';
+  bool _sortAscending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _loadTeamStats();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTeamStats() async {
+    // Gerçek uygulamada API'den veri çekilecek
+    await Future.delayed(Duration(seconds: 1)); // API çağrısı simülasyonu
+    
+    // Örnek veri
+    final List<TeamStats> stats = [
+      TeamStats(
+        name: 'Boston Celtics',
+        abbreviation: 'BOS',
+        logoUrl: 'assets/teams/celtics.png',
+        conference: 'Eastern',
+        wins: 60,
+        losses: 22,
+        ppg: 118.6,
+        oppg: 106.8,
+        fgPercentage: 47.9,
+        threePointPercentage: 38.2,
+        rpg: 44.5,
+        apg: 26.2,
+        spg: 7.4,
+        bpg: 5.8,
+      ),
+      TeamStats(
+        name: 'Los Angeles Lakers',
+        abbreviation: 'LAL',
+        logoUrl: 'assets/teams/lakers.png',
+        conference: 'Western',
+        wins: 52,
+        losses: 30,
+        ppg: 117.3,
+        oppg: 112.8,
+        fgPercentage: 49.1,
+        threePointPercentage: 35.3,
+        rpg: 43.6,
+        apg: 27.5,
+        spg: 7.1,
+        bpg: 5.5,
+      ),
+      TeamStats(
+        name: 'Golden State Warriors',
+        abbreviation: 'GSW',
+        logoUrl: 'assets/teams/warriors.png',
+        conference: 'Western',
+        wins: 54,
+        losses: 28,
+        ppg: 120.5,
+        oppg: 114.2,
+        fgPercentage: 48.3,
+        threePointPercentage: 39.5,
+        rpg: 42.9,
+        apg: 29.1,
+        spg: 8.0,
+        bpg: 4.8,
+      ),
+      TeamStats(
+        name: 'Milwaukee Bucks',
+        abbreviation: 'MIL',
+        logoUrl: 'assets/teams/bucks.png',
+        conference: 'Eastern',
+        wins: 56,
+        losses: 26,
+        ppg: 116.8,
+        oppg: 110.2,
+        fgPercentage: 48.6,
+        threePointPercentage: 36.8,
+        rpg: 46.1,
+        apg: 25.7,
+        spg: 6.5,
+        bpg: 5.1,
+      ),
+      TeamStats(
+        name: 'Phoenix Suns',
+        abbreviation: 'PHX',
+        logoUrl: 'assets/teams/suns.png',
+        conference: 'Western',
+        wins: 49,
+        losses: 33,
+        ppg: 115.2,
+        oppg: 111.5,
+        fgPercentage: 48.7,
+        threePointPercentage: 37.6,
+        rpg: 43.2,
+        apg: 26.5,
+        spg: 7.2,
+        bpg: 4.9,
+      ),
+    ];
+    
+    if (mounted) {
+      setState(() {
+        _teamStats = stats;
+        _isLoading = false;
+        _sortTeams();
+      });
+    }
+  }
+
+  void _sortTeams() {
+    setState(() {
+      switch (_sortBy) {
+        case 'wins':
+          _teamStats.sort((a, b) => _sortAscending
+              ? a.wins.compareTo(b.wins)
+              : b.wins.compareTo(a.wins));
+          break;
+        case 'losses':
+          _teamStats.sort((a, b) => _sortAscending
+              ? a.losses.compareTo(b.losses)
+              : b.losses.compareTo(a.losses));
+          break;
+        case 'ppg':
+          _teamStats.sort((a, b) => _sortAscending
+              ? a.ppg.compareTo(b.ppg)
+              : b.ppg.compareTo(a.ppg));
+          break;
+        case 'oppg':
+          _teamStats.sort((a, b) => _sortAscending
+              ? a.oppg.compareTo(b.oppg)
+              : b.oppg.compareTo(a.oppg));
+          break;
+        default:
+          _teamStats.sort((a, b) => _sortAscending
+              ? a.wins.compareTo(b.wins)
+              : b.wins.compareTo(a.wins));
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Takım İstatistikleri'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: 'Genel'),
+            Tab(text: 'Hücum'),
+            Tab(text: 'Savunma'),
+          ],
+        ),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildGeneralTab(),
+                _buildOffensiveTab(),
+                _buildDefensiveTab(),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildGeneralTab() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Text('Sırala: '),
+              DropdownButton<String>(
+                value: _sortBy,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _sortBy = value;
+                      _sortTeams();
+                    });
+                  }
+                },
+                items: [
+                  DropdownMenuItem(value: 'wins', child: Text('Galibiyet')),
+                  DropdownMenuItem(value: 'losses', child: Text('Mağlubiyet')),
+                  DropdownMenuItem(value: 'ppg', child: Text('Sayı')),
+                  DropdownMenuItem(value: 'oppg', child: Text('Rakip Sayı')),
+                ],
+              ),
+              IconButton(
+                icon: Icon(_sortAscending
+                    ? Icons.arrow_upward
+                    : Icons.arrow_downward),
+                onPressed: () {
+                  setState(() {
+                    _sortAscending = !_sortAscending;
+                    _sortTeams();
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _teamStats.length,
+            itemBuilder: (context, index) {
+              final team = _teamStats[index];
+              return Card(
+                margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.transparent,
+                    // Logo yoksa takım kısaltmasını göster
+                    child: Text(
+                      team.abbreviation,
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    team.name,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text('${team.conference} Konferansı'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildStatColumn('G', team.wins.toString()),
+                      SizedBox(width: 10),
+                      _buildStatColumn('M', team.losses.toString()),
+                      SizedBox(width: 10),
+                      _buildStatColumn('W-L %', 
+                        (team.wins / (team.wins + team.losses)).toStringAsFixed(3)),
+                    ],
+                  ),
+                  onTap: () {
+                    _showTeamDetails(context, team);
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOffensiveTab() {
+    return ListView.builder(
+      itemCount: _teamStats.length,
+      itemBuilder: (context, index) {
+        final team = _teamStats[index];
+        // Takımları PPG'ye göre sırala
+        _teamStats.sort((a, b) => b.ppg.compareTo(a.ppg));
+        return Card(
+          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.transparent,
+                      child: Text(
+                        team.abbreviation,
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      team.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildStatBox('PPG', team.ppg.toStringAsFixed(1)),
+                    _buildStatBox('FG%', '${team.fgPercentage.toStringAsFixe
+                    // screens/team_stats_screen.dart (devam)
+                    _buildStatBox('FG%', '${team.fgPercentage.toStringAsFixed(1)}%'),
+                    _buildStatBox('3P%', '${team.threePointPercentage.toStringAsFixed(1)}%'),
+                    _buildStatBox('AST', team.apg.toStringAsFixed(1)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDefensiveTab() {
+    return ListView.builder(
+      itemCount: _teamStats.length,
+      itemBuilder: (context, index) {
+        // Takımları OPPG'ye göre sırala (en az sayı yiyen en üstte)
+        _teamStats.sort((a, b) => a.oppg.compareTo(b.oppg));
+        final team = _teamStats[index];
+        return Card(
+          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.transparent,
+                      child: Text(
+                        team.abbreviation,
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      team.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildStatBox('OPPG', team.oppg.toStringAsFixed(1)),
+                    _buildStatBox('RPG', team.rpg.toStringAsFixed(1)),
+                    _buildStatBox('STL', team.spg.toStringAsFixed(1)),
+                    _buildStatBox('BLK', team.bpg.toStringAsFixed(1)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatColumn(String label, String value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatBox(String label, String value) {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 5),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTeamDetails(BuildContext context, TeamStats team) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(16),
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 60,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  margin: EdgeInsets.only(bottom: 16),
+                ),
+              ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.grey[200],
+                    child: Text(
+                      team.abbreviation,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        team.name,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${team.conference} Konferansı',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        '${team.wins}-${team.losses}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: 24),
+              Text(
+                'Takım İstatistikleri',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  childAspectRatio: 2.5,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  children: [
+                    _buildDetailCard('Sayı', '${team.ppg.toStringAsFixed(1)} PPG'),
+                    _buildDetailCard('Rakip Sayı', '${team.oppg.toStringAsFixed(1)} OPPG'),
+                    _buildDetailCard('Ribaund', '${team.rpg.toStringAsFixed(1)} RPG'),
+                    _buildDetailCard('Asist', '${team.apg.toStringAsFixed(1)} APG'),
+                    _buildDetailCard('Şut %', '${team.fgPercentage.toStringAsFixed(1)}%'),
+                    _buildDetailCard('3 Sayı %', '${team.threePointPercentage.toStringAsFixed(1)}%'),
+                    _buildDetailCard('Çalınan Top', '${team.spg.toStringAsFixed(1)} SPG'),
+                    _buildDetailCard('Blok', '${team.bpg.toStringAsFixed(1)} BPG'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailCard(String label, String value) {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TeamStats {
+  final String name;
+  final String abbreviation;
+  final String logoUrl;
+  final String conference;
+  final int wins;
+  final int losses;
+  final double ppg;
+  final double oppg;
+  final double fgPercentage;
+  final double threePointPercentage;
+  final double rpg;
+  final double apg;
+  final double spg;
+  final double bpg;
+
+  TeamStats({
+    required this.name,
+    required this.abbreviation,
+    required this.logoUrl,
+    required this.conference,
+    required this.wins,
+    required this.losses,
+    required this.ppg,
+    required this.oppg,
+    required this.fgPercentage,
+    required this.threePointPercentage,
+    required this.rpg,
+    required this.apg,
+    required this.spg,
+    required this.bpg,
+  });
+}
