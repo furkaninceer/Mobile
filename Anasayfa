@@ -1,0 +1,185 @@
+// main.dart
+import 'package:flutter/material.dart';
+import 'screens/player_stats_screen.dart';
+import 'screens/team_stats_screen.dart';
+import 'screens/standings_screen.dart';
+import 'screens/schedule_screen.dart';
+import 'screens/live_scores_screen.dart';
+import 'screens/player_profiles_screen.dart';
+import 'screens/news_screen.dart';
+import 'screens/highlights_screen.dart';
+import 'screens/fantasy_screen.dart';
+import 'screens/settings_screen.dart';
+
+void main() {
+  runApp(NBAStatsApp());
+}
+
+class NBAStatsApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'NBA İstatistikleri',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        primaryColor: Color(0xFF17408B), // NBA Mavi
+        accentColor: Color(0xFFC9082A), // NBA Kırmızı
+        fontFamily: 'Roboto',
+        scaffoldBackgroundColor: Colors.grey[100],
+      ),
+      home: HomePage(),
+      routes: {
+        '/player_stats': (context) => PlayerStatsScreen(),
+        '/team_stats': (context) => TeamStatsScreen(),
+        '/standings': (context) => StandingsScreen(),
+        '/schedule': (context) => ScheduleScreen(),
+        '/live_scores': (context) => LiveScoresScreen(),
+        '/player_profiles': (context) => PlayerProfilesScreen(),
+        '/news': (context) => NewsScreen(),
+        '/highlights': (context) => HighlightsScreen(),
+        '/fantasy': (context) => FantasyScreen(),
+        '/settings': (context) => SettingsScreen(),
+      },
+    );
+  }
+}
+
+class MenuItem {
+  final String title;
+  final IconData icon;
+  final String route;
+
+  MenuItem({required this.title, required this.icon, required this.route});
+}
+
+class HomePage extends StatelessWidget {
+  final List<MenuItem> menuItems = [
+    MenuItem(title: 'Oyuncu İstatistikleri', icon: Icons.person, route: '/player_stats'),
+    MenuItem(title: 'Takım İstatistikleri', icon: Icons.group, route: '/team_stats'),
+    MenuItem(title: 'Puan Durumu', icon: Icons.leaderboard, route: '/standings'),
+    MenuItem(title: 'Maç Programı', icon: Icons.calendar_today, route: '/schedule'),
+    MenuItem(title: 'Canlı Skorlar', icon: Icons.score, route: '/live_scores'),
+    MenuItem(title: 'Oyuncu Profilleri', icon: Icons.face, route: '/player_profiles'),
+    MenuItem(title: 'Haberler', icon: Icons.article, route: '/news'),
+    MenuItem(title: 'Öne Çıkanlar', icon: Icons.video_library, route: '/highlights'),
+    MenuItem(title: 'Fantasy NBA', icon: Icons.sports_basketball, route: '/fantasy'),
+    MenuItem(title: 'Ayarlar', icon: Icons.settings, route: '/settings'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('NBA İstatistikleri'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/nba_logo.png', // Buraya NBA logosu ekleyin
+                    height: 100,
+                    width: 100,
+                    // Logo yoksa aşağıdaki kodu kullanın
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.sports_basketball,
+                        size: 80,
+                        color: Colors.white,
+                      );
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'NBA İstatistikleri',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Güncel NBA verilerine hızlı erişim',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 20),
+          Expanded(
+            child: GridView.builder(
+              padding: EdgeInsets.all(15),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.3,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+              ),
+              itemCount: menuItems.length,
+              itemBuilder: (context, index) {
+                return _buildMenuItem(context, menuItems[index]);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(BuildContext context, MenuItem item) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, item.route),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              item.icon,
+              size: 40,
+              color: Theme.of(context).primaryColor,
+            ),
+            SizedBox(height: 10),
+            Text(
+              item.title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
